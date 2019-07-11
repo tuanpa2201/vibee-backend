@@ -90,7 +90,8 @@ function attachPrincipalPolicy(gateway, user, principal) {
 
 function validateToken(event, context) {
   let promise = new Promise((resolve, reject) => {
-    if (!event.headers.Authorization) {
+    if (!event.headers.Authorization ||
+      (event.headers.Authorization && event.headers.Authorization.indexOf('Bearer') < 0)) {
       const res = {
         statusCode: 403,
         headers: {
@@ -143,6 +144,31 @@ function validateUser(username) {
   return promise;
 }
 
+function gatewayExisted(gateway, createdUser) {
+  const params = {
+    TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
+    FilterExpression: "gateway = :gateway AND createdUser = :createdUser",
+    ExpressionAttributeValues: {
+      ":gateway": gateway,
+      ":createdUser": createdUser
+    },
+  };
+  let promise = new Promise((resolve, reject) => {
+    dynamoDb.scan(params, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        if (result.Items && result.Items.length > 0) {
+          resolve(result.Items[0]);
+        } else {
+          resolve(null);
+        }
+      }
+    });
+  });
+  return promise;
+}
+
 module.exports.attachPrincipalPolicy = (event, context) => {
   const data = JSON.parse(event.body);
   attachPrincipalPolicy(data.gateway, data.user, data.principal)
@@ -159,199 +185,218 @@ module.exports.attachPrincipalPolicy = (event, context) => {
 };
 
 module.exports.userAddGateway = (event, context) => {
+    validateToken(event, context)
+      .then(() => {
+        const timestamp = new Date().getTime();
+        const data = JSON.parse(event.body);
+        validateUser(data.username)
+          .then(() => {
+            const params = {
+              TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
+              Item: {
+                id: uuid.v1(),
+                username: data.username,
+                gateway: data.gateway,
+                permission: data.permission,
+                createdUser: data.created_user,
+                createdAt: timestamp,
+                updatedAt: timestamp,
+              },
+            };
+
+            dynamoDb.put(params, (error) => {
+              if (error) {
+                console.error(error);
+                context.done(null, {
+                  statusCode: error.statusCode || 501,
+                  headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+                  body: JSON.stringify(error) + JSON.stringify(data),
+                })
+                return;
+              }
+
+              const response = {
+                statusCode: 200,
+                headers: {
+                  'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+                },
+                body: JSON.stringify(params.Item),
+              };
+              createIoTPolicy(data.gateway, data.username)
+                .then(() => {
+                  context.done(null, response);
+                })
+            });
+          })
+          .catch((res) => {
+            context.done(null, res);
+          })
+      })
+      .catch(res => {
+        context.done(null, res);
+      });
+};
+
+module.exports.userAddGateway = (event, context) => {
   validateToken(event, context)
     .then(() => {
       const timestamp = new Date().getTime();
       const data = JSON.parse(event.body);
+      let response;
+
       validateUser(data.username)
-      .then(() => {
-        const params = {
-          TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
-          Item: {
-            id: uuid.v1(),
-            username: data.username,
-            gateway: data.gateway,
-            permission: data.permission,
-            createdUser: data.created_user,
-            createdAt: timestamp,
-            updatedAt: timestamp,
-          },
-        };
-  
-        dynamoDb.put(params, (error) => {
-          if (error) {
-            console.error(error);
-            context.done(null, {
-              statusCode: error.statusCode || 501,
-              headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
-              body: JSON.stringify(error) + JSON.stringify(data),
+        .then(() => {
+          gatewayExisted(data.gateway, data.created_user)
+            .then(existItem => {
+              let item = {
+                id: uuid.v1(),
+                username: data.username,
+                gateway: data.gateway,
+                permission: data.permission,
+                createdUser: data.created_user,
+                createdAt: timestamp,
+                updatedAt: timestamp,
+              };
+
+              const params = {
+                TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
+                Item: item
+              };
+
+              if (!existItem ||
+                (existItem && existItem.createdUser === data.created_user && data.permission.role === 'guest')) {
+                dynamoDb.put(params, (error) => {
+                  if (error) {
+                    console.error(error);
+                    context.done(null, {
+                      statusCode: error.statusCode || 501,
+                      headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+                      body: JSON.stringify(error) + JSON.stringify(data),
+                    })
+                    return;
+                  }
+
+                  response = {
+                    statusCode: 200,
+                    headers: {
+                      'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+                    },
+                    body: JSON.stringify(item),
+                  };
+                  createIoTPolicy(data.gateway, data.username)
+                    .then(() => {
+                      context.done(null, response);
+                    })
+                });
+              } else {
+                existItem.username = item.username;
+                if (data.created_user !== existItem.createdUser)
+                  existItem.permission.role = "guest";
+
+                response = {
+                  statusCode: 200,
+                  headers: {
+                    'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+                  },
+                  body: JSON.stringify(existItem),
+                }
+                context.done(null, response);
+              }
             })
-            return;
-          }
-  
-          const response = {
-              statusCode: 200,
-              headers: {
-                  'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-              },
-              body: JSON.stringify(params.Item),
-            };
-          createIoTPolicy(data.gateway, data.username)
-            .then(() => {
-              context.done(null, response);
-            })
-        });
-      })
-      .catch((res) => {
-        context.done(null, res);
-      })
+            .catch(res => context.done(null, res))
+        })
+        .catch((res) => {
+          context.done(null, res);
+        })
     })
     .catch(res => {
       context.done(null, res);
     });
 };
 
-module.exports.updateUserGateway = (event, context) => {
+module.exports.deleteUserGateway = (event, context) => {
   validateToken(event, context)
-    .then(tokenInfo => {
-      const timestamp = new Date().getTime();
-      const data = JSON.parse(event.body);
+    .then(() => {
       const params = {
         TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
         Key: {
           id: event.pathParameters.id
         },
-        ExpressionAttributeValues: {
-          // ':username': data.username,
-          // ':gateway': data.gateway,
-          ':permission': data.permission,
-          ':updatedAt': timestamp,
-        },
-        ExpressionAttributeNames:{
-          "#perm": "permission"
-        },
-        // UpdateExpression: 'SET username = :username, gateway = :gateway, #perm = :permission, updatedAt =:updatedAt',
-        UpdateExpression: 'SET #perm = :permission, updatedAt =:updatedAt',
-        ReturnValues: 'ALL_NEW',
       };
 
-      dynamoDb.update(params, (error) => {
+      dynamoDb.get(params, (err, result) => {
+        if (!err) {
+          deleteIoTPolicy(result.Item.gateway, result.Item.username)
+            .then((errpolicy) => {
+              dynamoDb.delete(params, (error) => {
+                // handle potential errors
+                if (error) {
+                  console.error(error);
+                  context.done(null, {
+                    statusCode: error.statusCode || 501,
+                    headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+                    body: JSON.stringify(error),
+                  })
+                  return;
+                }
+
+                // create a response
+                const response = {
+                  statusCode: 200,
+                  headers: {
+                    'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+                  },
+                  body: JSON.stringify({status: 'OK', item: result, err: errpolicy}),
+                };
+                context.done(null, response);
+              });
+            })
+        }
+      })
+    })
+    .catch(res => {
+      context.done(null, res);
+    });
+
+}
+
+module.exports.userListGateways = (event, context) => {
+  validateToken(event, context)
+    .then((tokenInfo) => {
+      const data = JSON.parse(event.body);
+      const params = {
+        TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
+        FilterExpression: "username = :username",
+        ExpressionAttributeValues: {
+          ":username": data.username
+        },
+      };
+
+      dynamoDb.scan(params, (error, result) => {
         if (error) {
           console.error(error);
           context.done(null, {
             statusCode: error.statusCode || 501,
             headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
-            body: JSON.stringify({error, data}),
-          })
+            body: JSON.stringify(error),
+          });
           return;
         }
 
         const response = {
-            statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-            },
-            body: JSON.stringify(error) + JSON.stringify(data),
-          };
-          context.done(null, response);
+          statusCode: 200,
+          headers: {
+            'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+          },
+          body: JSON.stringify(result),
+        };
+        context.done(null, response);
       });
     })
     .catch(res => {
       context.done(null, res);
     })
 }
-
-module.exports.deleteUserGateway = (event, context) => {
-  validateToken(event, context)
-  .then(() => {
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
-      Key: {
-        id: event.pathParameters.id
-      },
-    };
-    
-    dynamoDb.get(params, (err, result) => {
-      if (!err) {
-        deleteIoTPolicy(result.Item.gateway, result.Item.username)
-        .then((errpolicy) => {
-          dynamoDb.delete(params, (error) => {
-            // handle potential errors
-            if (error) {
-              console.error(error);
-              context.done(null, {
-                statusCode: error.statusCode || 501,
-                headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
-                body: JSON.stringify(error),
-              })
-              return;
-            }
-        
-            // create a response
-            const response = {
-                statusCode: 200,
-                headers: {
-                    'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-                },
-                body: JSON.stringify({status: 'OK', item: result, err: errpolicy}),
-              };
-            context.done(null, response);
-          });
-        })
-      }
-    })
-  })
-  .catch(res => {
-    context.done(null, res);
-  });
-    
-}
-
-module.exports.userListGateways = (event, context) => {
-  validateToken(event, context)
-  .then((tokenInfo) => {
-    const data = JSON.parse(event.body);
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
-      FilterExpression: "username = :username",
-      ExpressionAttributeValues: {
-        ":username": data.username
-      }, 
-    };
-    dynamoDb.scan(params, (error, result) => {
-      if (error) {
-        console.error(error);
-        callback(null, {
-          statusCode: error.statusCode || 501,
-          headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
-          body: JSON.stringify(error),
-        });
-        return;
-      }
-
-      const response = {
-        statusCode: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-        },
-        body: JSON.stringify(result),
-      };
-      context.done(null, response);
-    });
-      // const response = {
-      //     statusCode: 200,
-      //     headers: {
-      //       'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-      //     },
-      //     body: JSON.stringify(tokenInfo),
-      //   };
-      //   context.done(null, response);
-  })
-  .catch(res => {
-    context.done(null, res);
-  })
-}
-
 module.exports.gatewayGetUsers = (event, context) => {
   validateToken(event, context)
   .then(() => {
