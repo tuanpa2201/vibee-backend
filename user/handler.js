@@ -185,59 +185,6 @@ module.exports.attachPrincipalPolicy = (event, context) => {
 };
 
 module.exports.userAddGateway = (event, context) => {
-    validateToken(event, context)
-      .then(() => {
-        const timestamp = new Date().getTime();
-        const data = JSON.parse(event.body);
-        validateUser(data.username)
-          .then(() => {
-            const params = {
-              TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
-              Item: {
-                id: uuid.v1(),
-                username: data.username,
-                gateway: data.gateway,
-                permission: data.permission,
-                createdUser: data.created_user,
-                createdAt: timestamp,
-                updatedAt: timestamp,
-              },
-            };
-
-            dynamoDb.put(params, (error) => {
-              if (error) {
-                console.error(error);
-                context.done(null, {
-                  statusCode: error.statusCode || 501,
-                  headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
-                  body: JSON.stringify(error) + JSON.stringify(data),
-                })
-                return;
-              }
-
-              const response = {
-                statusCode: 200,
-                headers: {
-                  'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-                },
-                body: JSON.stringify(params.Item),
-              };
-              createIoTPolicy(data.gateway, data.username)
-                .then(() => {
-                  context.done(null, response);
-                })
-            });
-          })
-          .catch((res) => {
-            context.done(null, res);
-          })
-      })
-      .catch(res => {
-        context.done(null, res);
-      });
-};
-
-module.exports.userAddGateway = (event, context) => {
   validateToken(event, context)
     .then(() => {
       const timestamp = new Date().getTime();
@@ -313,6 +260,56 @@ module.exports.userAddGateway = (event, context) => {
       context.done(null, res);
     });
 };
+
+module.exports.updateUserGateway = (event, context) => {
+  validateToken(event, context)
+    .then(tokenInfo => {
+      const timestamp = new Date().getTime();
+      const data = JSON.parse(event.body);
+      const params = {
+        TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
+        Key: {
+          id: event.pathParameters.id
+        },
+        ExpressionAttributeValues: {
+          // ':username': data.username,
+          // ':gateway': data.gateway,
+          ':permission': data.permission,
+          ':updatedAt': timestamp,
+        },
+        ExpressionAttributeNames:{
+          "#perm": "permission"
+        },
+        // UpdateExpression: 'SET username = :username, gateway = :gateway, #perm = :permission, updatedAt =:updatedAt',
+        UpdateExpression: 'SET #perm = :permission, updatedAt =:updatedAt',
+        ReturnValues: 'ALL_NEW',
+      };
+
+      dynamoDb.update(params, (error) => {
+        if (error) {
+          console.error(error);
+          context.done(null, {
+            statusCode: error.statusCode || 501,
+            headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+            body: JSON.stringify({error, data}),
+          })
+          return;
+        }
+
+        const response = {
+          statusCode: 200,
+          headers: {
+            'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+          },
+          body: JSON.stringify(error) + JSON.stringify(data),
+        };
+        context.done(null, response);
+      });
+    })
+    .catch(res => {
+      context.done(null, res);
+    })
+}
 
 module.exports.deleteUserGateway = (event, context) => {
   validateToken(event, context)
