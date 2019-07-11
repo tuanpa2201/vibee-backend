@@ -1,0 +1,79 @@
+service: vity-smarthome-backend
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-1'}
+  environment:
+    DYNAMODB_TABLE_USER_GATEWAY: vity_smarthome_user_gateway
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - iot:CreateKeysAndCertificate
+        - iot:CreatePolicy
+        - iot:AttachPolicy
+        - iot:DeletePolicy
+        - iot:AttachPrincipalPolicy
+        - cognito-idp:AdminGetUser
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE_USER_GATEWAY}"
+
+functions:
+  userAddGateway:
+    handler: user/handler.userAddGateway
+    events:
+      - http:
+          path: userAddGateway
+          method: post
+          cors: true
+  updateUserGateway:
+    handler: user/handler.updateUserGateway
+    events:
+      - http:
+          path: updateUserGateway/{id}
+          method: post
+          cors: true
+  userListGateways:
+    handler: user/handler.userListGateways
+    events:
+      - http:
+          path: userListGateways
+          method: post
+          cors: true
+  gatewayGetUsers:
+    handler: user/handler.gatewayGetUsers
+    events:
+      - http:
+          path: gatewayGetUsers
+          method: post
+          cors: true
+  deleteUserGateway:
+    handler: user/handler.deleteUserGateway
+    events:
+      - http:
+          path: deleteUserGateway/{id}
+          method: post
+          cors: true
+  attachPrincipalPolicy:
+    handler: user/handler.attachPrincipalPolicy
+    events:
+      - http:
+          path: attachPrincipalPolicy
+          method: post
+          cors: true
+  testAccessToken:
+    handler: user/handler.testAccessToken
+    events:
+      - http:
+          path: testAccessToken
+          method: post
+          cors: true
