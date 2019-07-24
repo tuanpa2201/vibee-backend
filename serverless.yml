@@ -15,6 +15,8 @@ provider:
         - iot:AttachPolicy
         - iot:DeletePolicy
         - iot:AttachPrincipalPolicy
+        - iot:UpdateCertificate
+        - iot:AttachThingPrincipal
         - cognito-idp:AdminGetUser
       Resource: "*"
     - Effect: Allow

@@ -1,6 +1,6 @@
 'use strict';
 const uuid = require('uuid');
-const AWS = require('aws-sdk'); 
+const AWS = require('aws-sdk');
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const iot = new AWS.Iot();
 const awsIoTBaseArn = 'arn:aws:iot:ap-southeast-1:124891600745';
@@ -17,37 +17,32 @@ const cognitoExpress = new CognitoExpress({
 function createIoTPolicy(gateway, user) {
   const policyDocument = {
     Version: '2012-10-17',
-    Statement: [{
-      Effect: 'Allow',
-      Action: 'iot:Connect',
-      Resource: '*'
-    },
+    Statement: [
       {
         Effect: 'Allow',
-        Action: [
-          'iot:Subscribe'
-        ],
-        Resource: [
-          `${awsIoTBaseArn}:topicfilter/vitysmarthome/${gateway}/${user}/*`
-        ]
-      },
-      {
-        Effect: 'Allow',
-        Action: [
-          'iot:*'
-        ],
-        Resource: [
-          `${awsIoTBaseArn}:topic/vitysmarthome/${gateway}/${user}/*`
-        ]
+        Action: 'iot:Connect',
+        Resource: '*'
       },
       {
         Effect: 'Allow',
         Action: [
           'iot:Subscribe'
         ],
-        Resource: [
-          `${awsIoTBaseArn}:topicfilter/vitysmarthome/${gateway}/broadcast`
-        ]
+        Resource: "*"
+      },
+      {
+        Effect: 'Allow',
+        Action: [
+          'iot:Publish'
+        ],
+        Resource: "*"
+      },
+      {
+        Effect: 'Allow',
+        Action: [
+          'iot:Receive'
+        ],
+        Resource: "*"
       },
     ]
   };
@@ -78,7 +73,7 @@ function deleteIoTPolicy(gateway, user) {
 function attachPrincipalPolicy(gateway, user, principal) {
   const params = {
     policyName: `VitySmartHomePolicy_${gateway}_${user}`,
-    principal: principal
+    principal: `${awsIoTBaseArn}:cert/${principal}`
   };
   let promise = new Promise(resolve => {
     iot.attachPrincipalPolicy(params, (err) => {
@@ -126,7 +121,7 @@ function validateUser(username) {
     Username: username
   };
   let promise = new Promise((resolve, reject) => {
-    cognitoIdentityServiceProvider.adminGetUser(params, function(err, data) {
+    cognitoIdentityServiceProvider.adminGetUser(params, function (err, data) {
       if (err) {
         const res = {
           statusCode: 403,
@@ -144,13 +139,12 @@ function validateUser(username) {
   return promise;
 }
 
-function gatewayExisted(gateway, createdUser) {
+function gatewayExisted(gateway) {
   const params = {
     TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
-    FilterExpression: "gateway = :gateway AND createdUser = :createdUser",
+    FilterExpression: "gateway = :gateway",
     ExpressionAttributeValues: {
-      ":gateway": gateway,
-      ":createdUser": createdUser
+      ":gateway": gateway
     },
   };
   let promise = new Promise((resolve, reject) => {
@@ -159,7 +153,14 @@ function gatewayExisted(gateway, createdUser) {
         reject(error);
       } else {
         if (result.Items && result.Items.length > 0) {
-          resolve(result.Items[0]);
+          let output = null;
+          for (let i = 0; i < result.Items.length; i++) {
+            if (result.Items[i].createdUser === result.Items[i].username) {
+              output = result.Items[i];
+              break;
+            }
+          }
+          resolve(output);
         } else {
           resolve(null);
         }
@@ -169,17 +170,77 @@ function gatewayExisted(gateway, createdUser) {
   return promise;
 }
 
+function updateCertificate(certificateId, newStatus) {
+  let promise = new Promise((resolve, reject) => {
+    let params = {
+      certificateId: certificateId,
+      newStatus: newStatus /* ACTIVE | INACTIVE | REVOKED | PENDING_TRANSFER | REGISTER_INACTIVE | PENDING_ACTIVATION */
+    };
+    iot.updateCertificate(params, (err, data) => {
+      if (err)
+        reject(err);
+      else
+        resolve(data);
+    });
+  });
+  return promise;
+}
+
+function attachThingPrincipal(principal, thingName) {
+  let promise = new Promise((resolve, reject) => {
+    let params = {
+      principal: `${awsIoTBaseArn}:cert/${principal}`,
+      thingName: thingName
+    };
+    iot.attachThingPrincipal(params, (err, data) => {
+      if (err)
+        reject(err);
+      else
+        resolve(data);
+    });
+  });
+  return promise;
+}
+
 module.exports.attachPrincipalPolicy = (event, context) => {
-  const data = JSON.parse(event.body);
-  attachPrincipalPolicy(data.gateway, data.user, data.principal)
-    .then(err => {
-      const response = {
-        statusCode: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-        },
-        body: JSON.stringify({status: 'OK', err}),
-      };
+  let response = {
+    statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+    }
+  };
+  validateToken(event, context)
+    .then(() => {
+      let data = JSON.parse(event.body);
+      updateCertificate(data.certId, 'ACTIVE')
+        .then(value => {
+          // TODO
+          //let thingName = `${data.provider}-gw-${data.gateway}`;
+          let thingName = "thingShadow1";
+          attachThingPrincipal(data.certId, thingName)
+            .then(value => {
+              attachPrincipalPolicy(data.gateway, data.user, data.certId)
+                .then(res => {
+                  response.body = JSON.stringify({status: 'OK', res});
+                  context.done(null, response);
+                })
+                .catch(err => {
+                  response.body = JSON.stringify({status: 'FAIL', err});
+                  context.done(null, response);
+                })
+            })
+            .catch(err => {
+              response.body = JSON.stringify({status: 'FAIL', err});
+              context.done(null, response);
+            })
+        })
+        .catch(err => {
+          response.body = JSON.stringify({status: 'FAIL', err});
+          context.done(null, response);
+        })
+    })
+    .catch(res => {
+      response.body = JSON.stringify({status: 'FAIL', err});
       context.done(null, response);
     })
 };
@@ -193,7 +254,7 @@ module.exports.userAddGateway = (event, context) => {
 
       validateUser(data.username)
         .then(() => {
-          gatewayExisted(data.gateway, data.created_user)
+          gatewayExisted(data.gateway)
             .then(existItem => {
               let item = {
                 id: uuid.v1(),
@@ -217,8 +278,8 @@ module.exports.userAddGateway = (event, context) => {
                     console.error(error);
                     context.done(null, {
                       statusCode: error.statusCode || 501,
-                      headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
-                      body: JSON.stringify(error) + JSON.stringify(data),
+                      headers: {'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+                      body: JSON.stringify(error)
                     })
                     return;
                   }
@@ -252,8 +313,8 @@ module.exports.userAddGateway = (event, context) => {
             })
             .catch(res => context.done(null, res))
         })
-        .catch((res) => {
-          context.done(null, res);
+        .catch(res => {
+          context.done(null, res)
         })
     })
     .catch(res => {
@@ -272,12 +333,10 @@ module.exports.updateUserGateway = (event, context) => {
           id: event.pathParameters.id
         },
         ExpressionAttributeValues: {
-          // ':username': data.username,
-          // ':gateway': data.gateway,
           ':permission': data.permission,
           ':updatedAt': timestamp,
         },
-        ExpressionAttributeNames:{
+        ExpressionAttributeNames: {
           "#perm": "permission"
         },
         // UpdateExpression: 'SET username = :username, gateway = :gateway, #perm = :permission, updatedAt =:updatedAt',
@@ -290,8 +349,8 @@ module.exports.updateUserGateway = (event, context) => {
           console.error(error);
           context.done(null, {
             statusCode: error.statusCode || 501,
-            headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
-            body: JSON.stringify({error, data}),
+            headers: {'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+            body: JSON.stringify(error),
           })
           return;
         }
@@ -301,7 +360,7 @@ module.exports.updateUserGateway = (event, context) => {
           headers: {
             'Access-Control-Allow-Origin': '*', // Required for CORS support to work
           },
-          body: JSON.stringify(error) + JSON.stringify(data),
+          body: JSON.stringify(data),
         };
         context.done(null, response);
       });
@@ -331,7 +390,7 @@ module.exports.deleteUserGateway = (event, context) => {
                   console.error(error);
                   context.done(null, {
                     statusCode: error.statusCode || 501,
-                    headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+                    headers: {'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
                     body: JSON.stringify(error),
                   })
                   return;
@@ -374,7 +433,7 @@ module.exports.userListGateways = (event, context) => {
           console.error(error);
           context.done(null, {
             statusCode: error.statusCode || 501,
-            headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+            headers: {'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
             body: JSON.stringify(error),
           });
           return;
@@ -396,39 +455,39 @@ module.exports.userListGateways = (event, context) => {
 }
 module.exports.gatewayGetUsers = (event, context) => {
   validateToken(event, context)
-  .then(() => {
-    const data = JSON.parse(event.body);
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
-      FilterExpression: "gateway = :gateway",
-      ExpressionAttributeValues: {
-        ":gateway": data.gateway
-      }, 
-    };
-    dynamoDb.scan(params, (error, result) => {
-      if (error) {
-        console.error(error);
-        callback(null, {
-          statusCode: error.statusCode || 501,
-          headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
-          body: JSON.stringify(error),
-        });
-        return;
-      }
-
-      const response = {
-        statusCode: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+    .then(() => {
+      const data = JSON.parse(event.body);
+      const params = {
+        TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
+        FilterExpression: "gateway = :gateway",
+        ExpressionAttributeValues: {
+          ":gateway": data.gateway
         },
-        body: JSON.stringify(result),
       };
-      context.done(null, response);
-    });
-  })
-  .catch(res => {
-    context.done(null, res);
-  })
+      dynamoDb.scan(params, (error, result) => {
+        if (error) {
+          console.error(error);
+          callback(null, {
+            statusCode: error.statusCode || 501,
+            headers: {'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+            body: JSON.stringify(error),
+          });
+          return;
+        }
+
+        const response = {
+          statusCode: 200,
+          headers: {
+            'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+          },
+          body: JSON.stringify(result),
+        };
+        context.done(null, response);
+      });
+    })
+    .catch(res => {
+      context.done(null, res);
+    })
 }
 
 module.exports.testAccessToken = (event, context) => {
