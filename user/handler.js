@@ -10,11 +10,56 @@ const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
 const cognitoExpress = new CognitoExpress({
   region: "ap-southeast-1",
   cognitoUserPoolId: cognitoUserPoolId,
-  tokenUse: "access", //Possible Values: access | id
+  tokenUse: "id", //Possible Values: access | id
   tokenExpiration: 3600000 //Up to default expiration of 1 hour (3600000 ms)
 });
 
 function createIoTPolicy(gateway, user) {
+  /* let thingName = 'thingShadow1';
+  // let thingName = `mht-gw-${gateway}`;
+  let shadowPrefix = `$aws/things/${thingName}/shadow`;
+  const policyDocument = {
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Action: 'iot:Connect',
+        Resource: "*"
+      },
+      {
+        Effect: 'Allow',
+        Action: [
+          'iot:Subscribe'
+        ],
+        Resource: [
+          `arn:aws:iot:ap-southeast-1:124891600745:topicfilter/mht/${gateway}/!*`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topicfilter/${shadowPrefix}/get/accepted`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topicfilter/${shadowPrefix}/update`,
+        ]
+      },
+      {
+        Effect: 'Allow',
+        Action: [
+          'iot:Publish'
+        ],
+        Resource: [
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/mht/${gateway}/deviceleft`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/mht/${gateway}/devices`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/mht/${gateway}/devicejoined`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/mht/${gateway}/deviceupdate`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/mht/${gateway}/database`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/mht/${gateway}/cloudresource`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/${shadowPrefix}/get`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/${shadowPrefix}/update`
+        ]
+      },
+      {
+        Effect: 'Allow',
+        Action: 'iot:Receive',
+        Resource: "*"
+      },
+    ]
+  };*/
   const policyDocument = {
     Version: '2012-10-17',
     Statement: [
@@ -250,7 +295,12 @@ module.exports.userAddGateway = (event, context) => {
     .then(() => {
       const timestamp = new Date().getTime();
       const data = JSON.parse(event.body);
-      let response;
+      let response = {
+        statusCode: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+        }
+      }
 
       validateUser(data.username)
         .then(() => {
@@ -263,7 +313,7 @@ module.exports.userAddGateway = (event, context) => {
                 permission: data.permission,
                 createdUser: data.created_user,
                 createdAt: timestamp,
-                updatedAt: timestamp,
+                updatedAt: timestamp
               };
 
               const params = {
@@ -283,31 +333,22 @@ module.exports.userAddGateway = (event, context) => {
                     })
                     return;
                   }
-
-                  response = {
-                    statusCode: 200,
-                    headers: {
-                      'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-                    },
-                    body: JSON.stringify(item),
-                  };
                   createIoTPolicy(data.gateway, data.username)
                     .then(() => {
+                      // root dang ky HC lan dau
+                      item.exist = false;
+                      response.body = JSON.stringify(item);
                       context.done(null, response);
                     })
                 });
               } else {
                 existItem.username = item.username;
+                // khach dang ky HC da duoc root khai bao tu truoc
                 if (data.created_user !== existItem.createdUser)
                   existItem.permission.role = "guest";
-
-                response = {
-                  statusCode: 200,
-                  headers: {
-                    'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-                  },
-                  body: JSON.stringify(existItem),
-                }
+                // thong tin HC da ton tai
+                existItem.exist = true;
+                response.body = JSON.stringify(existItem);
                 context.done(null, response);
               }
             })

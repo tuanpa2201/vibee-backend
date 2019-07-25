@@ -41,7 +41,7 @@ functions:
     handler: user/handler.updateUserGateway
     events:
       - http:
-          path: updateUserGateway/{id}
+          path: updateUserGateway
           method: post
           cors: true
   userListGateways:
@@ -62,7 +62,7 @@ functions:
     handler: user/handler.deleteUserGateway
     events:
       - http:
-          path: deleteUserGateway/{id}
+          path: deleteUserGateway
           method: post
           cors: true
   attachPrincipalPolicy:
