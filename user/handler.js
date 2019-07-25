@@ -330,7 +330,7 @@ module.exports.updateUserGateway = (event, context) => {
       const params = {
         TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
         Key: {
-          id: event.pathParameters.id
+          id: data.id
         },
         ExpressionAttributeValues: {
           ':permission': data.permission,
@@ -373,10 +373,11 @@ module.exports.updateUserGateway = (event, context) => {
 module.exports.deleteUserGateway = (event, context) => {
   validateToken(event, context)
     .then(() => {
+      const data = JSON.parse(event.body);
       const params = {
         TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
         Key: {
-          id: event.pathParameters.id
+          id: data.id
         },
       };
 
