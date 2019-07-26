@@ -15,10 +15,10 @@ const cognitoExpress = new CognitoExpress({
 });
 
 function createIoTPolicy(gateway, user) {
-  /* let thingName = 'thingShadow1';
+  let thingName = 'thingShadow1';
   // let thingName = `mht-gw-${gateway}`;
   let shadowPrefix = `$aws/things/${thingName}/shadow`;
-  const policyDocument = {
+  /* const policyDocument = {
     Version: '2012-10-17',
     Statement: [
       {
@@ -71,23 +71,23 @@ function createIoTPolicy(gateway, user) {
       {
         Effect: 'Allow',
         Action: [
-          'iot:Subscribe'
-        ],
-        Resource: "*"
-      },
-      {
-        Effect: 'Allow',
-        Action: [
-          'iot:Publish'
-        ],
-        Resource: "*"
-      },
-      {
-        Effect: 'Allow',
-        Action: [
+          'iot:Publish',
           'iot:Receive'
         ],
-        Resource: "*"
+        Resource: [
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/mht/*`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topic/${shadowPrefix}/*`
+        ]
+      },
+      {
+        Effect: 'Allow',
+        Action: [
+          'iot:Subscribe'
+        ],
+        Resource: [
+          `arn:aws:iot:ap-southeast-1:124891600745:topicfilter/mht/*`,
+          `arn:aws:iot:ap-southeast-1:124891600745:topicfilter/${shadowPrefix}/*`
+        ]
       },
     ]
   };
