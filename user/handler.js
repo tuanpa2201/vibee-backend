@@ -116,15 +116,30 @@ function deleteIoTPolicy(gateway, user) {
 }
 
 function attachPrincipalPolicy(gateway, user, principal) {
-  const params = {
-    policyName: `VitySmartHomePolicy_${gateway}_${user}`,
-    principal: `${awsIoTBaseArn}:cert/${principal}`
-  };
   let promise = new Promise(resolve => {
+    let params = {
+      policyName: `VitySmartHomePolicy_${gateway}_${user}`,
+      principal: principal
+    };
+    // attach cognito user into policy
+    iot.attachPrincipalPolicy(params, (err) => {
+      resolve(err);
+    });
+  });
+  return promise;
+}
+
+function attachCertificatePolicy(gateway, user, certid) {
+  let promise = new Promise(resolve => {
+    let params = {
+      policyName: `VitySmartHomePolicy_${gateway}_${user}`,
+      principal: `${awsIoTBaseArn}:cert/${certid}`
+    };
+    // attach device (HC) into policy
     iot.attachPrincipalPolicy(params, (err) => {
       resolve(err);
     })
-  })
+  });
   return promise;
 }
 
@@ -257,6 +272,32 @@ module.exports.attachPrincipalPolicy = (event, context) => {
   validateToken(event, context)
     .then(() => {
       let data = JSON.parse(event.body);
+      attachPrincipalPolicy(data.gateway, data.user, data.principal)
+        .then(res => {
+          response.body = JSON.stringify({status: 'OK', res});
+          context.done(null, response);
+        })
+        .catch(err => {
+          response.body = JSON.stringify({status: 'FAIL', err});
+          context.done(null, response);
+        })
+    })
+    .catch(res => {
+      response.body = JSON.stringify({status: 'FAIL', err});
+      context.done(null, response);
+    })
+};
+
+module.exports.attachCertDevicePolicy = (event, context) => {
+  let response = {
+    statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+    }
+  };
+  validateToken(event, context)
+    .then(() => {
+      let data = JSON.parse(event.body);
       updateCertificate(data.certId, 'ACTIVE')
         .then(value => {
           // TODO
@@ -264,7 +305,7 @@ module.exports.attachPrincipalPolicy = (event, context) => {
           let thingName = "thingShadow1";
           attachThingPrincipal(data.certId, thingName)
             .then(value => {
-              attachPrincipalPolicy(data.gateway, data.user, data.certId)
+              attachCertificatePolicy(data.gateway, data.user, data.certId)
                 .then(res => {
                   response.body = JSON.stringify({status: 'OK', res});
                   context.done(null, response);

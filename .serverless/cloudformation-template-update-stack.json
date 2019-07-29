@@ -167,7 +167,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564044030318-2019-07-25T08:40:30.318Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1564158275632-2019-07-26T16:24:35.632Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-userAddGateway",
         "Handler": "user/handler.userAddGateway",
@@ -191,14 +191,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "UserAddGatewayLambdaVersionaUy7P4NdnBLw5KSW4MnltF1OPW7cR7fxiGbDfTf5sQ": {
+    "UserAddGatewayLambdaVersionyq4ujVxthmIewwuII6eE4Z3ry12XRs6OTM69kAk": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "UserAddGatewayLambdaFunction"
         },
-        "CodeSha256": "4vnqyhhulitG8uJdDQMaQuvNgYnejkvDAA1lDLSnX/0="
+        "CodeSha256": "jpwWR5+hUhxxhTX7cudInWtC1DRKxpDvkq7reKuWxMA="
       }
     },
     "UpdateUserGatewayLambdaFunction": {
@@ -208,7 +208,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564044030318-2019-07-25T08:40:30.318Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1564158275632-2019-07-26T16:24:35.632Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-updateUserGateway",
         "Handler": "user/handler.updateUserGateway",
@@ -232,14 +232,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "UpdateUserGatewayLambdaVersionFxylBxvOACLI52QPd9VB0OGCpcBlOdjFVPWpiYQMrUs": {
+    "UpdateUserGatewayLambdaVersioniUa67kfH27ax4NVWYogXYGn6h2FEhGI81qLW7fOz4M4": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "UpdateUserGatewayLambdaFunction"
         },
-        "CodeSha256": "4vnqyhhulitG8uJdDQMaQuvNgYnejkvDAA1lDLSnX/0="
+        "CodeSha256": "jpwWR5+hUhxxhTX7cudInWtC1DRKxpDvkq7reKuWxMA="
       }
     },
     "UserListGatewaysLambdaFunction": {
@@ -249,7 +249,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564044030318-2019-07-25T08:40:30.318Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1564158275632-2019-07-26T16:24:35.632Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-userListGateways",
         "Handler": "user/handler.userListGateways",
@@ -273,14 +273,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "UserListGatewaysLambdaVersioneJ4QzajEShsl0BcYLTeH5WrZBH5dWZoVZIuwQ6sN4": {
+    "UserListGatewaysLambdaVersiontrv8PNMMbFmv9ApxI94LOtw8uyuqj58AWXhNCO9xDw": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "UserListGatewaysLambdaFunction"
         },
-        "CodeSha256": "4vnqyhhulitG8uJdDQMaQuvNgYnejkvDAA1lDLSnX/0="
+        "CodeSha256": "jpwWR5+hUhxxhTX7cudInWtC1DRKxpDvkq7reKuWxMA="
       }
     },
     "GatewayGetUsersLambdaFunction": {
@@ -290,7 +290,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564044030318-2019-07-25T08:40:30.318Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1564158275632-2019-07-26T16:24:35.632Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-gatewayGetUsers",
         "Handler": "user/handler.gatewayGetUsers",
@@ -314,14 +314,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "GatewayGetUsersLambdaVersionIUp8Dj7fGy8rYQKTtdM12Ct9OoKkbOpaSwhj5IDQrLA": {
+    "GatewayGetUsersLambdaVersionguMjFYU7TwDFUDY10SXtPfvF6m5GRhNM0QSIIcGVQ": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GatewayGetUsersLambdaFunction"
         },
-        "CodeSha256": "4vnqyhhulitG8uJdDQMaQuvNgYnejkvDAA1lDLSnX/0="
+        "CodeSha256": "jpwWR5+hUhxxhTX7cudInWtC1DRKxpDvkq7reKuWxMA="
       }
     },
     "DeleteUserGatewayLambdaFunction": {
@@ -331,7 +331,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564044030318-2019-07-25T08:40:30.318Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1564158275632-2019-07-26T16:24:35.632Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-deleteUserGateway",
         "Handler": "user/handler.deleteUserGateway",
@@ -355,14 +355,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "DeleteUserGatewayLambdaVersionP1q2yL08qsVxSyyUbJNKYhQOwHfU37HYh8cpWE": {
+    "DeleteUserGatewayLambdaVersiongB4TzDwGgjk9KhcRB3bCWLjKqtHjoTfxKUQlAjlY": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "DeleteUserGatewayLambdaFunction"
         },
-        "CodeSha256": "4vnqyhhulitG8uJdDQMaQuvNgYnejkvDAA1lDLSnX/0="
+        "CodeSha256": "jpwWR5+hUhxxhTX7cudInWtC1DRKxpDvkq7reKuWxMA="
       }
     },
     "AttachPrincipalPolicyLambdaFunction": {
@@ -372,7 +372,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564044030318-2019-07-25T08:40:30.318Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1564158275632-2019-07-26T16:24:35.632Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-attachPrincipalPolicy",
         "Handler": "user/handler.attachPrincipalPolicy",
@@ -396,14 +396,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "AttachPrincipalPolicyLambdaVersioncQUkwwLgM15XSsf9IlTJkWndNoN4RUTFeV5B6yVA": {
+    "AttachPrincipalPolicyLambdaVersionAz1GyPm6UiSqaP2RH0eHKJuF12eDpE5j73mgvpyc": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "AttachPrincipalPolicyLambdaFunction"
         },
-        "CodeSha256": "4vnqyhhulitG8uJdDQMaQuvNgYnejkvDAA1lDLSnX/0="
+        "CodeSha256": "jpwWR5+hUhxxhTX7cudInWtC1DRKxpDvkq7reKuWxMA="
       }
     },
     "TestAccessTokenLambdaFunction": {
@@ -413,7 +413,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564044030318-2019-07-25T08:40:30.318Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1564158275632-2019-07-26T16:24:35.632Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-testAccessToken",
         "Handler": "user/handler.testAccessToken",
@@ -437,14 +437,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "TestAccessTokenLambdaVersionmA7lPw5lyIkW87MzA3J5WtFk5f80k5rKoQCajVaw": {
+    "TestAccessTokenLambdaVersionozGIPqv8sBkgTPfkOcRPq3XJs3i1HjjY2ntk3s4": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "TestAccessTokenLambdaFunction"
         },
-        "CodeSha256": "4vnqyhhulitG8uJdDQMaQuvNgYnejkvDAA1lDLSnX/0="
+        "CodeSha256": "jpwWR5+hUhxxhTX7cudInWtC1DRKxpDvkq7reKuWxMA="
       }
     },
     "ApiGatewayRestApi": {
@@ -1193,7 +1193,7 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayDeployment1564044022968": {
+    "ApiGatewayDeployment1564158265894": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -1487,43 +1487,43 @@
     "UserAddGatewayLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "UserAddGatewayLambdaVersionaUy7P4NdnBLw5KSW4MnltF1OPW7cR7fxiGbDfTf5sQ"
+        "Ref": "UserAddGatewayLambdaVersionyq4ujVxthmIewwuII6eE4Z3ry12XRs6OTM69kAk"
       }
     },
     "UpdateUserGatewayLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "UpdateUserGatewayLambdaVersionFxylBxvOACLI52QPd9VB0OGCpcBlOdjFVPWpiYQMrUs"
+        "Ref": "UpdateUserGatewayLambdaVersioniUa67kfH27ax4NVWYogXYGn6h2FEhGI81qLW7fOz4M4"
       }
     },
     "UserListGatewaysLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "UserListGatewaysLambdaVersioneJ4QzajEShsl0BcYLTeH5WrZBH5dWZoVZIuwQ6sN4"
+        "Ref": "UserListGatewaysLambdaVersiontrv8PNMMbFmv9ApxI94LOtw8uyuqj58AWXhNCO9xDw"
       }
     },
     "GatewayGetUsersLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GatewayGetUsersLambdaVersionIUp8Dj7fGy8rYQKTtdM12Ct9OoKkbOpaSwhj5IDQrLA"
+        "Ref": "GatewayGetUsersLambdaVersionguMjFYU7TwDFUDY10SXtPfvF6m5GRhNM0QSIIcGVQ"
       }
     },
     "DeleteUserGatewayLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "DeleteUserGatewayLambdaVersionP1q2yL08qsVxSyyUbJNKYhQOwHfU37HYh8cpWE"
+        "Ref": "DeleteUserGatewayLambdaVersiongB4TzDwGgjk9KhcRB3bCWLjKqtHjoTfxKUQlAjlY"
       }
     },
     "AttachPrincipalPolicyLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "AttachPrincipalPolicyLambdaVersioncQUkwwLgM15XSsf9IlTJkWndNoN4RUTFeV5B6yVA"
+        "Ref": "AttachPrincipalPolicyLambdaVersionAz1GyPm6UiSqaP2RH0eHKJuF12eDpE5j73mgvpyc"
       }
     },
     "TestAccessTokenLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "TestAccessTokenLambdaVersionmA7lPw5lyIkW87MzA3J5WtFk5f80k5rKoQCajVaw"
+        "Ref": "TestAccessTokenLambdaVersionozGIPqv8sBkgTPfkOcRPq3XJs3i1HjjY2ntk3s4"
       }
     },
     "ServiceEndpoint": {
