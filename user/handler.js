@@ -15,8 +15,7 @@ const cognitoExpress = new CognitoExpress({
 });
 
 function createIoTPolicy(gateway, user) {
-  let thingName = 'thingShadow1';
-  // let thingName = `mht-gw-${gateway}`;
+  let thingName = `mht-gw-${gateway}`;
   let shadowPrefix = `$aws/things/${thingName}/shadow`;
   /* const policyDocument = {
     Version: '2012-10-17',
@@ -98,6 +97,23 @@ function createIoTPolicy(gateway, user) {
   let promise = new Promise(resolve => {
     iot.createPolicy(params, (err) => {
       resolve(err);
+    })
+  })
+  return promise;
+}
+
+function createThing(gateway) {
+  let thingName = `mht-gw-${gateway}`;
+  const params = {
+    thingName: thingName
+  };
+  let promise = new Promise((resolve, reject) => {
+    iot.createThing(params, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
     })
   })
   return promise;
@@ -300,15 +316,20 @@ module.exports.attachCertDevicePolicy = (event, context) => {
       let data = JSON.parse(event.body);
       updateCertificate(data.certId, 'ACTIVE')
         .then(value => {
-          // TODO
-          //let thingName = `${data.provider}-gw-${data.gateway}`;
-          let thingName = "thingShadow1";
-          attachThingPrincipal(data.certId, thingName)
+          // create thing
+          createThing(data.gateway)
             .then(value => {
-              attachCertificatePolicy(data.gateway, data.user, data.certId)
-                .then(res => {
-                  response.body = JSON.stringify({status: 'OK', res});
-                  context.done(null, response);
+              attachThingPrincipal(data.certId, thingName)
+                .then(value => {
+                  attachCertificatePolicy(data.gateway, data.user, data.certId)
+                    .then(res => {
+                      response.body = JSON.stringify({status: 'OK', res});
+                      context.done(null, response);
+                    })
+                    .catch(err => {
+                      response.body = JSON.stringify({status: 'FAIL', err});
+                      context.done(null, response);
+                    })
                 })
                 .catch(err => {
                   response.body = JSON.stringify({status: 'FAIL', err});
