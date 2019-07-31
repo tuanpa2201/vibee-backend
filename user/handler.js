@@ -15,7 +15,8 @@ const cognitoExpress = new CognitoExpress({
 });
 
 function createIoTPolicy(gateway, user) {
-  let thingName = `mht-gw-${gateway}`;
+  // let thingName = `mht-gw-${gateway}`;
+  let thingName = "thingShadow1";
   let shadowPrefix = `$aws/things/${thingName}/shadow`;
   /* const policyDocument = {
     Version: '2012-10-17',
@@ -102,8 +103,7 @@ function createIoTPolicy(gateway, user) {
   return promise;
 }
 
-function createThing(gateway) {
-  let thingName = `mht-gw-${gateway}`;
+function createThing(thingName) {
   const params = {
     thingName: thingName
   };
@@ -317,7 +317,9 @@ module.exports.attachCertDevicePolicy = (event, context) => {
       updateCertificate(data.certId, 'ACTIVE')
         .then(value => {
           // create thing
-          createThing(data.gateway)
+          //let thingName = `mht-gw-${data.gateway}`;
+          let thingName = "thingShadow1";
+          createThing(thingName)
             .then(value => {
               attachThingPrincipal(data.certId, thingName)
                 .then(value => {
