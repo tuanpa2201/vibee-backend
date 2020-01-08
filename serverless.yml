@@ -7,6 +7,7 @@ provider:
   region: ${opt:region, 'ap-southeast-1'}
   environment:
     DYNAMODB_TABLE_USER_GATEWAY: vity_smarthome_user_gateway
+    DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE: vity_smarthome_user_gateway_voice_active
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -17,6 +18,7 @@ provider:
         - iot:AttachPrincipalPolicy
         - iot:UpdateCertificate
         - iot:AttachThingPrincipal
+        - iot:CreateThing
         - cognito-idp:AdminGetUser
       Resource: "*"
     - Effect: Allow
@@ -27,7 +29,9 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE_USER_GATEWAY}"
+      Resource:
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE_USER_GATEWAY}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE}"
 
 functions:
   userAddGateway:
@@ -72,6 +76,13 @@ functions:
           path: attachPrincipalPolicy
           method: post
           cors: true
+  attachCertDevicePolicy:
+    handler: user/handler.attachCertDevicePolicy
+    events:
+    - http:
+        path: attachCertDevicePolicy
+        method: post
+        cors: true
   testAccessToken:
     handler: user/handler.testAccessToken
     events:
@@ -79,3 +90,10 @@ functions:
           path: testAccessToken
           method: post
           cors: true
+  gatewayVoiceActivated:
+    handler: user/handler.gatewayVoiceActivated
+    events:
+    - http:
+        path: gatewayVoiceActivated
+        method: post
+        cors: true

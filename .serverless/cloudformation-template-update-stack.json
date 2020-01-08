@@ -16,6 +16,46 @@
         }
       }
     },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
     "UserAddGatewayLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
@@ -52,10 +92,22 @@
         "LogGroupName": "/aws/lambda/vity-smarthome-backend-dev-attachPrincipalPolicy"
       }
     },
+    "AttachCertDevicePolicyLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/vity-smarthome-backend-dev-attachCertDevicePolicy"
+      }
+    },
     "TestAccessTokenLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": "/aws/lambda/vity-smarthome-backend-dev-testAccessToken"
+      }
+    },
+    "GatewayVoiceActivatedLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/vity-smarthome-backend-dev-gatewayVoiceActivated"
       }
     },
     "IamRoleLambdaExecution": {
@@ -124,6 +176,7 @@
                     "iot:AttachPrincipalPolicy",
                     "iot:UpdateCertificate",
                     "iot:AttachThingPrincipal",
+                    "iot:CreateThing",
                     "cognito-idp:AdminGetUser"
                   ],
                   "Resource": "*"
@@ -138,7 +191,10 @@
                     "dynamodb:UpdateItem",
                     "dynamodb:DeleteItem"
                   ],
-                  "Resource": "arn:aws:dynamodb:ap-southeast-1:*:table/vity_smarthome_user_gateway"
+                  "Resource": [
+                    "arn:aws:dynamodb:ap-southeast-1:*:table/vity_smarthome_user_gateway",
+                    "arn:aws:dynamodb:ap-southeast-1:*:table/vity_smarthome_user_gateway_voice_active"
+                  ]
                 }
               ]
             }
@@ -167,7 +223,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564364024625-2019-07-29T01:33:44.625Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-userAddGateway",
         "Handler": "user/handler.userAddGateway",
@@ -182,7 +238,8 @@
         "Timeout": 6,
         "Environment": {
           "Variables": {
-            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway"
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
           }
         }
       },
@@ -191,14 +248,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "UserAddGatewayLambdaVersionjT7Ss398hNWJixJeS2Ip7uE4KiMvMeHn9RjLYc2dCA": {
+    "UserAddGatewayLambdaVersionjzFgw8ZNCB9tjHDPKHqTudbPtJhTu0IACkXzMUpE8": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "UserAddGatewayLambdaFunction"
         },
-        "CodeSha256": "hj03FrJcreXqFbIXGq54y0XgTxEg2WfGkJ0NvpDcvBk="
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
       }
     },
     "UpdateUserGatewayLambdaFunction": {
@@ -208,7 +265,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564364024625-2019-07-29T01:33:44.625Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-updateUserGateway",
         "Handler": "user/handler.updateUserGateway",
@@ -223,7 +280,8 @@
         "Timeout": 6,
         "Environment": {
           "Variables": {
-            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway"
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
           }
         }
       },
@@ -232,14 +290,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "UpdateUserGatewayLambdaVersionwIO2W1a8TZhSIJOkRftVH0giBlNVolxMAl6JAsBkZc8": {
+    "UpdateUserGatewayLambdaVersion9vZFc7Ea8mPLZwHu1nHalAZxd570AGBUKdlpNJHYB0": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "UpdateUserGatewayLambdaFunction"
         },
-        "CodeSha256": "hj03FrJcreXqFbIXGq54y0XgTxEg2WfGkJ0NvpDcvBk="
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
       }
     },
     "UserListGatewaysLambdaFunction": {
@@ -249,7 +307,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564364024625-2019-07-29T01:33:44.625Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-userListGateways",
         "Handler": "user/handler.userListGateways",
@@ -264,7 +322,8 @@
         "Timeout": 6,
         "Environment": {
           "Variables": {
-            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway"
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
           }
         }
       },
@@ -273,14 +332,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "UserListGatewaysLambdaVersionv5ghICt3rARmwYUW3I0TYI7ZUiLkIzl0Ru6zziE3A": {
+    "UserListGatewaysLambdaVersionkHoZj6s3c8CQRqKq52nim33OYOdgBqhn9ROIfK3xo": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "UserListGatewaysLambdaFunction"
         },
-        "CodeSha256": "hj03FrJcreXqFbIXGq54y0XgTxEg2WfGkJ0NvpDcvBk="
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
       }
     },
     "GatewayGetUsersLambdaFunction": {
@@ -290,7 +349,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564364024625-2019-07-29T01:33:44.625Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-gatewayGetUsers",
         "Handler": "user/handler.gatewayGetUsers",
@@ -305,7 +364,8 @@
         "Timeout": 6,
         "Environment": {
           "Variables": {
-            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway"
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
           }
         }
       },
@@ -314,14 +374,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "GatewayGetUsersLambdaVersion1dc8G5UY850Y6F4voGToroWQE9rRYlSdTzNrDZbpFo": {
+    "GatewayGetUsersLambdaVersionOSG4WUp9apLDxmHTg84FW63vqkcoQyD3jEvzvG26Q": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GatewayGetUsersLambdaFunction"
         },
-        "CodeSha256": "hj03FrJcreXqFbIXGq54y0XgTxEg2WfGkJ0NvpDcvBk="
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
       }
     },
     "DeleteUserGatewayLambdaFunction": {
@@ -331,7 +391,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564364024625-2019-07-29T01:33:44.625Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-deleteUserGateway",
         "Handler": "user/handler.deleteUserGateway",
@@ -346,7 +406,8 @@
         "Timeout": 6,
         "Environment": {
           "Variables": {
-            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway"
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
           }
         }
       },
@@ -355,14 +416,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "DeleteUserGatewayLambdaVersionDV7u33hCaApZM6vSoiFxIX1PzpbC9nL2UBIcObyP9o": {
+    "DeleteUserGatewayLambdaVersiontU8gv6Le7XjS2YItct5yIgqMPyYsWVsAYewtqvO8": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "DeleteUserGatewayLambdaFunction"
         },
-        "CodeSha256": "hj03FrJcreXqFbIXGq54y0XgTxEg2WfGkJ0NvpDcvBk="
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
       }
     },
     "AttachPrincipalPolicyLambdaFunction": {
@@ -372,7 +433,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564364024625-2019-07-29T01:33:44.625Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-attachPrincipalPolicy",
         "Handler": "user/handler.attachPrincipalPolicy",
@@ -387,7 +448,8 @@
         "Timeout": 6,
         "Environment": {
           "Variables": {
-            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway"
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
           }
         }
       },
@@ -396,14 +458,56 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "AttachPrincipalPolicyLambdaVersionCQpAzLGzYe2NcWwbDwfIfuiHYfoqYOWrLhfJTX2n0": {
+    "AttachPrincipalPolicyLambdaVersionLAXrP71f2s8WYBQ2459oaWThxIotOAC9S4dmcMmFM": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "AttachPrincipalPolicyLambdaFunction"
         },
-        "CodeSha256": "hj03FrJcreXqFbIXGq54y0XgTxEg2WfGkJ0NvpDcvBk="
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
+      }
+    },
+    "AttachCertDevicePolicyLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
+        },
+        "FunctionName": "vity-smarthome-backend-dev-attachCertDevicePolicy",
+        "Handler": "user/handler.attachCertDevicePolicy",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs8.10",
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
+          }
+        }
+      },
+      "DependsOn": [
+        "AttachCertDevicePolicyLogGroup",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "AttachCertDevicePolicyLambdaVersion7q6O9sARvulDkVpJz8Dts1mrRMLcL2ksPU1Gv1qk": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AttachCertDevicePolicyLambdaFunction"
+        },
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
       }
     },
     "TestAccessTokenLambdaFunction": {
@@ -413,7 +517,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/vity-smarthome-backend/dev/1564364024625-2019-07-29T01:33:44.625Z/vity-smarthome-backend.zip"
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
         },
         "FunctionName": "vity-smarthome-backend-dev-testAccessToken",
         "Handler": "user/handler.testAccessToken",
@@ -428,7 +532,8 @@
         "Timeout": 6,
         "Environment": {
           "Variables": {
-            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway"
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
           }
         }
       },
@@ -437,14 +542,56 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "TestAccessTokenLambdaVersion5dzrOBxR70W0Ym8MPRKszj8RPPceztj0ckkrROW7cg": {
+    "TestAccessTokenLambdaVersionTP8GyRnHud2MRY2ExmYJQjDOkvBMmDcMSR8xeCUcPc": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "TestAccessTokenLambdaFunction"
         },
-        "CodeSha256": "hj03FrJcreXqFbIXGq54y0XgTxEg2WfGkJ0NvpDcvBk="
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
+      }
+    },
+    "GatewayVoiceActivatedLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/vity-smarthome-backend/dev/1575866703617-2019-12-09T04:45:03.617Z/vity-smarthome-backend.zip"
+        },
+        "FunctionName": "vity-smarthome-backend-dev-gatewayVoiceActivated",
+        "Handler": "user/handler.gatewayVoiceActivated",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs8.10",
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "DYNAMODB_TABLE_USER_GATEWAY": "vity_smarthome_user_gateway",
+            "DYNAMODB_TABLE_USER_GATEWAY_VOICE_ACTIVE": "vity_smarthome_user_gateway_voice_active"
+          }
+        }
+      },
+      "DependsOn": [
+        "GatewayVoiceActivatedLogGroup",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "GatewayVoiceActivatedLambdaVersionHyqKk8IkHsQUDbrZjFQHEij96rEpBITNoODSPIRTb4": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "GatewayVoiceActivatedLambdaFunction"
+        },
+        "CodeSha256": "gPtVqok6SXMkb/DjpgU/4mOywSyZOH1jYiFoBkbFBFs="
       }
     },
     "ApiGatewayRestApi": {
@@ -548,6 +695,21 @@
         }
       }
     },
+    "ApiGatewayResourceAttachcertdevicepolicy": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "ApiGatewayRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "attachCertDevicePolicy",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
     "ApiGatewayResourceTestaccesstoken": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
@@ -558,6 +720,21 @@
           ]
         },
         "PathPart": "testAccessToken",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayResourceGatewayvoiceactivated": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "ApiGatewayRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "gatewayVoiceActivated",
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
@@ -574,8 +751,7 @@
             "ResponseParameters": {
               "method.response.header.Access-Control-Allow-Origin": true,
               "method.response.header.Access-Control-Allow-Headers": true,
-              "method.response.header.Access-Control-Allow-Methods": true,
-              "method.response.header.Access-Control-Allow-Credentials": true
+              "method.response.header.Access-Control-Allow-Methods": true
             },
             "ResponseModels": {}
           }
@@ -593,8 +769,7 @@
               "ResponseParameters": {
                 "method.response.header.Access-Control-Allow-Origin": "'*'",
                 "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
-                "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
               },
               "ResponseTemplates": {
                 "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
@@ -621,8 +796,7 @@
             "ResponseParameters": {
               "method.response.header.Access-Control-Allow-Origin": true,
               "method.response.header.Access-Control-Allow-Headers": true,
-              "method.response.header.Access-Control-Allow-Methods": true,
-              "method.response.header.Access-Control-Allow-Credentials": true
+              "method.response.header.Access-Control-Allow-Methods": true
             },
             "ResponseModels": {}
           }
@@ -640,8 +814,7 @@
               "ResponseParameters": {
                 "method.response.header.Access-Control-Allow-Origin": "'*'",
                 "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
-                "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
               },
               "ResponseTemplates": {
                 "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
@@ -668,8 +841,7 @@
             "ResponseParameters": {
               "method.response.header.Access-Control-Allow-Origin": true,
               "method.response.header.Access-Control-Allow-Headers": true,
-              "method.response.header.Access-Control-Allow-Methods": true,
-              "method.response.header.Access-Control-Allow-Credentials": true
+              "method.response.header.Access-Control-Allow-Methods": true
             },
             "ResponseModels": {}
           }
@@ -687,8 +859,7 @@
               "ResponseParameters": {
                 "method.response.header.Access-Control-Allow-Origin": "'*'",
                 "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
-                "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
               },
               "ResponseTemplates": {
                 "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
@@ -715,8 +886,7 @@
             "ResponseParameters": {
               "method.response.header.Access-Control-Allow-Origin": true,
               "method.response.header.Access-Control-Allow-Headers": true,
-              "method.response.header.Access-Control-Allow-Methods": true,
-              "method.response.header.Access-Control-Allow-Credentials": true
+              "method.response.header.Access-Control-Allow-Methods": true
             },
             "ResponseModels": {}
           }
@@ -734,8 +904,7 @@
               "ResponseParameters": {
                 "method.response.header.Access-Control-Allow-Origin": "'*'",
                 "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
-                "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
               },
               "ResponseTemplates": {
                 "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
@@ -762,8 +931,7 @@
             "ResponseParameters": {
               "method.response.header.Access-Control-Allow-Origin": true,
               "method.response.header.Access-Control-Allow-Headers": true,
-              "method.response.header.Access-Control-Allow-Methods": true,
-              "method.response.header.Access-Control-Allow-Credentials": true
+              "method.response.header.Access-Control-Allow-Methods": true
             },
             "ResponseModels": {}
           }
@@ -781,8 +949,7 @@
               "ResponseParameters": {
                 "method.response.header.Access-Control-Allow-Origin": "'*'",
                 "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
-                "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
               },
               "ResponseTemplates": {
                 "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
@@ -809,8 +976,7 @@
             "ResponseParameters": {
               "method.response.header.Access-Control-Allow-Origin": true,
               "method.response.header.Access-Control-Allow-Headers": true,
-              "method.response.header.Access-Control-Allow-Methods": true,
-              "method.response.header.Access-Control-Allow-Credentials": true
+              "method.response.header.Access-Control-Allow-Methods": true
             },
             "ResponseModels": {}
           }
@@ -828,8 +994,7 @@
               "ResponseParameters": {
                 "method.response.header.Access-Control-Allow-Origin": "'*'",
                 "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
-                "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
               },
               "ResponseTemplates": {
                 "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
@@ -839,6 +1004,51 @@
         },
         "ResourceId": {
           "Ref": "ApiGatewayResourceAttachprincipalpolicy"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayMethodAttachcertdevicepolicyOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": {
+            "application/json": "{statusCode:200}"
+          },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+              },
+              "ResponseTemplates": {
+                "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+              }
+            }
+          ]
+        },
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceAttachcertdevicepolicy"
         },
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
@@ -856,8 +1066,7 @@
             "ResponseParameters": {
               "method.response.header.Access-Control-Allow-Origin": true,
               "method.response.header.Access-Control-Allow-Headers": true,
-              "method.response.header.Access-Control-Allow-Methods": true,
-              "method.response.header.Access-Control-Allow-Credentials": true
+              "method.response.header.Access-Control-Allow-Methods": true
             },
             "ResponseModels": {}
           }
@@ -875,8 +1084,7 @@
               "ResponseParameters": {
                 "method.response.header.Access-Control-Allow-Origin": "'*'",
                 "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'",
-                "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
               },
               "ResponseTemplates": {
                 "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
@@ -886,6 +1094,51 @@
         },
         "ResourceId": {
           "Ref": "ApiGatewayResourceTestaccesstoken"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayMethodGatewayvoiceactivatedOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": {
+            "application/json": "{statusCode:200}"
+          },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+              },
+              "ResponseTemplates": {
+                "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".*\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+              }
+            }
+          ]
+        },
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceGatewayvoiceactivated"
         },
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
@@ -1150,6 +1403,49 @@
         "MethodResponses": []
       }
     },
+    "ApiGatewayMethodAttachcertdevicepolicyPost": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "POST",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceAttachcertdevicepolicy"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "AttachCertDevicePolicyLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      }
+    },
     "ApiGatewayMethodTestaccesstokenPost": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
@@ -1193,7 +1489,50 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayDeployment1564364016239": {
+    "ApiGatewayMethodGatewayvoiceactivatedPost": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "POST",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceGatewayvoiceactivated"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "GatewayVoiceActivatedLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      }
+    },
+    "ApiGatewayDeployment1575866689261": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -1208,14 +1547,18 @@
         "ApiGatewayMethodGatewaygetusersOptions",
         "ApiGatewayMethodDeleteusergatewayOptions",
         "ApiGatewayMethodAttachprincipalpolicyOptions",
+        "ApiGatewayMethodAttachcertdevicepolicyOptions",
         "ApiGatewayMethodTestaccesstokenOptions",
+        "ApiGatewayMethodGatewayvoiceactivatedOptions",
         "ApiGatewayMethodUseraddgatewayPost",
         "ApiGatewayMethodUpdateusergatewayPost",
         "ApiGatewayMethodUserlistgatewaysPost",
         "ApiGatewayMethodGatewaygetusersPost",
         "ApiGatewayMethodDeleteusergatewayPost",
         "ApiGatewayMethodAttachprincipalpolicyPost",
-        "ApiGatewayMethodTestaccesstokenPost"
+        "ApiGatewayMethodAttachcertdevicepolicyPost",
+        "ApiGatewayMethodTestaccesstokenPost",
+        "ApiGatewayMethodGatewayvoiceactivatedPost"
       ]
     },
     "UserAddGatewayLambdaPermissionApiGateway": {
@@ -1440,12 +1783,86 @@
         }
       }
     },
+    "AttachCertDevicePolicyLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AttachCertDevicePolicyLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
     "TestAccessTokenLambdaPermissionApiGateway": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
           "Fn::GetAtt": [
             "TestAccessTokenLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "GatewayVoiceActivatedLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GatewayVoiceActivatedLambdaFunction",
             "Arn"
           ]
         },
@@ -1487,43 +1904,55 @@
     "UserAddGatewayLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "UserAddGatewayLambdaVersionjT7Ss398hNWJixJeS2Ip7uE4KiMvMeHn9RjLYc2dCA"
+        "Ref": "UserAddGatewayLambdaVersionjzFgw8ZNCB9tjHDPKHqTudbPtJhTu0IACkXzMUpE8"
       }
     },
     "UpdateUserGatewayLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "UpdateUserGatewayLambdaVersionwIO2W1a8TZhSIJOkRftVH0giBlNVolxMAl6JAsBkZc8"
+        "Ref": "UpdateUserGatewayLambdaVersion9vZFc7Ea8mPLZwHu1nHalAZxd570AGBUKdlpNJHYB0"
       }
     },
     "UserListGatewaysLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "UserListGatewaysLambdaVersionv5ghICt3rARmwYUW3I0TYI7ZUiLkIzl0Ru6zziE3A"
+        "Ref": "UserListGatewaysLambdaVersionkHoZj6s3c8CQRqKq52nim33OYOdgBqhn9ROIfK3xo"
       }
     },
     "GatewayGetUsersLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GatewayGetUsersLambdaVersion1dc8G5UY850Y6F4voGToroWQE9rRYlSdTzNrDZbpFo"
+        "Ref": "GatewayGetUsersLambdaVersionOSG4WUp9apLDxmHTg84FW63vqkcoQyD3jEvzvG26Q"
       }
     },
     "DeleteUserGatewayLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "DeleteUserGatewayLambdaVersionDV7u33hCaApZM6vSoiFxIX1PzpbC9nL2UBIcObyP9o"
+        "Ref": "DeleteUserGatewayLambdaVersiontU8gv6Le7XjS2YItct5yIgqMPyYsWVsAYewtqvO8"
       }
     },
     "AttachPrincipalPolicyLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "AttachPrincipalPolicyLambdaVersionCQpAzLGzYe2NcWwbDwfIfuiHYfoqYOWrLhfJTX2n0"
+        "Ref": "AttachPrincipalPolicyLambdaVersionLAXrP71f2s8WYBQ2459oaWThxIotOAC9S4dmcMmFM"
+      }
+    },
+    "AttachCertDevicePolicyLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AttachCertDevicePolicyLambdaVersion7q6O9sARvulDkVpJz8Dts1mrRMLcL2ksPU1Gv1qk"
       }
     },
     "TestAccessTokenLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "TestAccessTokenLambdaVersion5dzrOBxR70W0Ym8MPRKszj8RPPceztj0ckkrROW7cg"
+        "Ref": "TestAccessTokenLambdaVersionTP8GyRnHud2MRY2ExmYJQjDOkvBMmDcMSR8xeCUcPc"
+      }
+    },
+    "GatewayVoiceActivatedLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "GatewayVoiceActivatedLambdaVersionHyqKk8IkHsQUDbrZjFQHEij96rEpBITNoODSPIRTb4"
       }
     },
     "ServiceEndpoint": {
