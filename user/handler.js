@@ -185,7 +185,7 @@ function validateTokenFromVoice(event, context) {
 }
 
 function validateUser(username) {
-  var params = {
+  let params = {
     UserPoolId: cognitoUserPoolId,
     Username: username
   };
@@ -232,6 +232,31 @@ function gatewayExisted(gateway) {
           resolve(output);
         } else {
           resolve(null);
+        }
+      }
+    });
+  });
+  return promise;
+}
+
+function gatewaySharedWithUser(gateway, username) {
+  const params = {
+    TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
+    FilterExpression: "gateway = :gateway AND username = :username",
+    ExpressionAttributeValues: {
+      ":gateway": gateway,
+      ":username": username
+    },
+  };
+  let promise = new Promise((resolve, reject) => {
+    dynamoDb.scan(params, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        if (result.Items && result.Items.length > 0) {
+          resolve(true);
+        } else {
+          resolve(false);
         }
       }
     });
@@ -393,6 +418,74 @@ module.exports.attachCertDevicePolicy = (event, context) => {
       })
 };
 
+module.exports.userInviteGuest = (event, context) => {
+  validateToken(event, context)
+      .then(() => {
+        const timestamp = new Date().getTime();
+        const data = JSON.parse(event.body);
+        let response = {
+          statusCode: 200,
+          headers: {
+            'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+          }
+        }
+        validateUser(data.username)
+            .then(() => {
+              gatewaySharedWithUser(data.gateway, data.username)
+                  .then(shared => {
+                    let item = {
+                      id: uuid.v1(),
+                      username: data.username,
+                      gateway: data.gateway,
+                      permission: data.permission,
+                      createdUser: data.created_user,
+                      createdAt: timestamp,
+                      updatedAt: timestamp
+                    };
+
+                    const params = {
+                      TableName: process.env.DYNAMODB_TABLE_USER_GATEWAY,
+                      Item: item
+                    };
+
+                    if (!shared) {
+                      dynamoDb.put(params, (error) => {
+                        if (error) {
+                          console.error(error);
+                          context.done(null, {
+                            statusCode: error.statusCode || 501,
+                            headers: {'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*',},
+                            body: JSON.stringify(error)
+                          })
+                          return;
+                        }
+                        // them moi thanh cong, nguoi dung moi da duoc chia se nha
+                        createIoTPolicy(data.provider, data.gateway, data.username)
+                            .then(() => {
+                              // root dang ky HC lan dau
+                              item.exist = false;
+                              response.body = JSON.stringify(item);
+                              context.done(null, response);
+                            })
+                      });
+                    } else {
+                      // tai khoan da duoc chia se nha
+                      item.exist = true;
+                      response.body = JSON.stringify(item);
+                      context.done(null, response);
+                    }
+                  })
+                  .catch(res => context.done(null, res))
+            })
+            .catch(res => {
+              context.done(null, res)
+            })
+      })
+      .catch(res => {
+        context.done(null, res);
+      });
+};
+
 module.exports.userAddGateway = (event, context) => {
   validateToken(event, context)
       .then(() => {
@@ -438,7 +531,6 @@ module.exports.userAddGateway = (event, context) => {
                         }
                         createIoTPolicy(data.provider, data.gateway, data.username)
                             .then(() => {
-                              // root dang ky HC lan dau
                               item.exist = false;
                               response.body = JSON.stringify(item);
                               context.done(null, response);

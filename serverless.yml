@@ -41,6 +41,13 @@ functions:
           path: userAddGateway
           method: post
           cors: true
+  userInviteGuest:
+    handler: user/handler.userInviteGuest
+    events:
+    - http:
+        path: userInviteGuest
+        method: post
+        cors: true
   updateUserGateway:
     handler: user/handler.updateUserGateway
     events:
